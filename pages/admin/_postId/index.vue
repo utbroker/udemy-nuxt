@@ -1,27 +1,37 @@
 <template>
   <div class="admin-post-page">
       <section class="update-form">
-          <AdminPostForm :post="loadedPost"/>
+          <AdminPostForm :post="loadedPost" @submit="onSave"/>
       </section>
   </div>
 </template>
 
 <script>
+import axios from 'axios'
 import AdminPostForm from '@/components/Admin/AdminPostForm'
 export default {
   components: {
       AdminPostForm
   },
   layout: 'admin',
-  data() {
+  asyncData(context) {
+    return axios.get('https://nuxt-blog-b05d6.firebaseio.com/posts/' + context.params.postId + '.json')
+    .then(res => {
       return {
-          loadedPost: {
-              author: 'Doug',
-              title: 'My Awesome Post',
-              content: 'Thanks for that',
-              thumbnailLink: 'https://articles-images.sftcdn.net/wp-content/uploads/sites/3/2017/05/computerworld_tech_forecast_2017_hottest-tech-skills-for-2017-100692085-large.jpg'
-          }
+        loadedPost: res.data,
+        postId: context.params.postId
       }
+    })
+    .catch(e => context.error(e))
+  },
+  methods: {
+    onSave (postData) {
+      axios.put('https://nuxt-blog-b05d6.firebaseio.com/posts/' + this.postId + '.json', {
+           ...postData, 
+           updatedDate: new Date()})
+      .then(result => console.log(result))
+      .catch(e => console.log(e))
+    }
   }
 }
 </script>
